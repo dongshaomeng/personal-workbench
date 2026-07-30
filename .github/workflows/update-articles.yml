@@ -1,0 +1,241 @@
+name: Update Articles Weekly
+
+on:
+  schedule:
+    # 每周一北京时间8点运行 (UTC时间0点)
+    - cron: '0 0 * * 1'
+  workflow_dispatch: # 支持手动触发
+
+permissions:
+  contents: write
+
+jobs:
+  update-articles:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Fetch articles
+        run: |
+          node << 'EOF'
+          const fs = require('fs');
+          const path = require('path');
+
+          // 文章数据结构
+          const articles = {
+            lastUpdate: new Date().toISOString(),
+            knowledge: {
+              common: [],
+              fun: [],
+              notes: [],
+              media: []
+            },
+            beijing: {
+              resource: [],
+              food: [],
+              welfare: [],
+              favorites: []
+            },
+            fatloss: {
+              knowledge: [],
+              cases: [],
+              quotes: []
+            }
+          };
+
+          // RSS解析函数
+          async function fetchRSS(url) {
+            try {
+              const res = await fetch(url, {
+                headers: { 'User-Agent': 'Mozilla/5.0 (compatible; PersonalWorkbench/1.0)' },
+                timeout: 10000
+              });
+              const text = await res.text();
+              return parseRSS(text);
+            } catch (e) {
+              console.log('RSS fetch error:', url, e.message);
+              return [];
+            }
+          }
+
+          // 简单的RSS解析
+          function parseRSS(xml) {
+            const items = [];
+            const itemRegex = /<item>([\s\S]*?)<\/item>/gi;
+            let match;
+            while ((match = itemRegex.exec(xml)) !== null) {
+              const item = match[1];
+              const title = extractTag(item, 'title');
+              const link = extractTag(item, 'link');
+              const desc = extractTag(item, 'description') || extractTag(item, 'content:encoded');
+              items.push({ title, link, desc: cleanHTML(desc).slice(0, 200) });
+            }
+            return items.slice(0, 5);
+          }
+
+          function extractTag(xml, tag) {
+            const regex = new RegExp(`<${tag}[^>]*><!\\[CDATA\\[([\\s\\S]*?)\\]\\]></${tag}>|<${tag}[^>]*>([\\s\\S]*?)</${tag}>`, 'i');
+            const match = xml.match(regex);
+            return match ? (match[1] || match[2] || '').trim() : '';
+          }
+
+          function cleanHTML(html) {
+            return html.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
+          }
+
+          // 数据源配置
+          const sources = {
+            knowledge: {
+              common: [
+                'https://rsshub.app/zhihu/hotlist', // 知乎热榜
+              ],
+              fun: [
+                'https://rsshub.app/shihuangzz/gt', // 果壳热门
+              ],
+              notes: [
+                'https://rsshub.app/douban/book/latest', // 豆瓣新书
+              ],
+              media: [
+                'https://rsshub.app/bilibili/ranking/0/3', // B站排行榜
+              ]
+            },
+            beijing: {
+              resource: [
+                'https://rsshub.app/ctrip/scenic/beijing', // 携程北京景点
+              ],
+              food: [
+                'https://rsshub.app/dianping/beijing/hot', // 大众点评北京
+              ],
+              welfare: [],
+              favorites: []
+            },
+            fatloss: {
+              knowledge: [
+                'https://rsshub.app/dxy/provider', // 丁香医生
+              ],
+              cases: [],
+              quotes: []
+            }
+          };
+
+          // 预置内容（当RSS不可用时使用）
+          const fallbackContent = {
+            knowledge: {
+              common: [
+                { title: '劳动者权益保护：这些法律常识你必须知道', source: '中国法院网', desc: '试用期最长不超过6个月、加班费按1.5-3倍计算、未签劳动合同可主张双倍工资。了解《劳动合同法》核心条款，是每个职场人的必修课。', link: 'https://www.chinacourt.org' },
+                { title: '租房避坑指南：合同里必须写清的5个条款', source: '中国普法网', desc: '押金退还条件、维修责任归属、提前退租违约金、转租是否允许、租期到期优先续租权。签合同前逐条确认，避免日后纠纷。', link: 'https://www.legalinfo.gov.cn' },
+                { title: '社交底层逻辑：建立深度关系的三个关键', source: '知乎专栏', desc: '1.价值互换：先提供价值再索取；2.情绪共鸣：学会倾听而非急于建议；3.长期主义：关系需要持续经营，而非用时方恨少。', link: 'https://zhuanlan.zhihu.com' }
+              ],
+              fun: [
+                { title: '为什么天空是蓝色的？瑞利散射原理', source: '科普中国', desc: '太阳光包含七色，蓝光波长短，被大气分子散射最强烈。你看到的蓝色天空，其实是被散射的蓝光进入眼睛的结果。', link: 'https://www.kepuchina.cn' },
+                { title: '人体冷知识：你的胃黏膜每3-4天更新一次', source: '果壳网', desc: '胃酸腐蚀性极强，为保护自身，胃黏膜细胞快速更替。这也是为什么胃能消化食物却不会"消化自己"。', link: 'https://www.guokr.com' }
+              ],
+              notes: [
+                { title: '《思考，快与慢》摘抄：系统1与系统2', source: '丹尼尔·卡尼曼', desc: '大脑有两套系统：系统1快速直觉但易出错，系统2缓慢理性但懒惰。大多数决策由系统1主导，重要决策要主动唤起系统2。', link: '' },
+                { title: '复利思维：微小进步的巨大力量', source: '读书摘抄', desc: '每天进步1%，一年后变为37倍；每天退步1%，一年后只剩0.03。复利不只适用于金钱，也适用于习惯、知识和关系。', link: '' }
+              ],
+              media: [
+                { title: '纪录片《人生第二次》', source: '央视纪录', desc: '8个故事记录普通人在命运转折点的抉择与重生。真实、克制、有力量，看完会对生活有新的理解。', link: 'https://tv.cctv.com' },
+                { title: '书籍《被讨厌的勇气》', source: '岸见一郎', desc: '阿德勒心理学入门。一切烦恼都来自人际关系，自由就是被别人讨厌。课题分离是获得幸福的关键。', link: '' }
+              ]
+            },
+            beijing: {
+              resource: [
+                { title: '国家博物馆免费参观预约指南', source: '国博官网', desc: '免费但需预约。提前1-7天在官网或微信公众号预约，每天分9:00/12:00两个时段。凭身份证入馆，周一闭馆。', link: 'https://www.chnmuseum.cn' },
+                { title: '故宫博物院预约购票攻略', source: '故宫官网', desc: '实行网络预售，不设现场售票。提前10天20点放票，旺季秒空。门票40元，珍宝馆10元。周一闭馆（法定节假日除外）。', link: 'https://www.dpm.org.cn' }
+              ],
+              food: [
+                { title: '南锣鼓巷小众打卡路线', source: '小红书', desc: '避开主街人流，钻进两侧胡同。雨儿胡同、帽儿胡同有安静的四合院和独立小店，适合慢逛拍照。', link: 'https://www.xiaohongshu.com' },
+                { title: '牛街平价美食地图', source: '大众点评', desc: '聚宝源涮肉、白记年糕、洪记小吃、奶酪魏。一条街吃遍清真美食，人均50-80元，排队是常态。', link: 'https://www.dianping.com' }
+              ],
+              welfare: [
+                { title: '北京医保电子凭证激活指南', source: '国家医保局', desc: '在"国家医保APP"或微信/支付宝搜索"医保电子凭证"，人脸识别激活。凭码就医购药，无需带卡。', link: 'https://fuwu.nhsa.gov.cn' }
+              ],
+              favorites: [
+                { title: '798艺术区看展指南', source: '798官网', desc: '免费入园，部分展览收费。周末有市集，UCCA、木木美术馆值得看。建议预留半天，地铁14号线将台站。', link: 'https://www.798art.org' }
+              ]
+            },
+            fatloss: {
+              knowledge: [
+                { title: '减脂 vs 减重：别只盯着体重秤', source: '丁香医生', desc: '体重下降可能是水分和肌肉流失。真正该关注的是体脂率。同样重量的肌肉比脂肪体积小1/3，体重没变但人瘦了，才是有效减脂。', link: 'https://www.dxy.com' },
+                { title: '基础代谢率：你每天到底消耗多少', source: 'Keep', desc: 'BMR约占每日消耗的60-70%。男性约1500-1800千卡，女性1200-1500千卡。吃得低于BMR会降低代谢、流失肌肉，得不偿失。', link: 'https://www.gotokeep.com' }
+              ],
+              cases: [
+                { title: '上班族3个月减重15斤：16:8轻断食+走路', source: 'Keep社区', desc: '28岁男，办公久坐。采用16:8间歇性禁食（中午12点-晚8点进食），每天快走40分钟。3个月从160斤到145斤，腰围减8cm。', link: 'https://www.gotokeep.com' }
+              ],
+              quotes: [
+                { title: '你今天的汗水，是明天的铠甲。' },
+                { title: '别让未来的你，讨厌现在的自己。' },
+                { title: '坚持很难，但放弃更难——因为你要承受一辈子的后果。' }
+              ]
+            }
+          };
+
+          // 合并抓取结果和预置内容
+          async function buildArticles() {
+            for (const category of Object.keys(sources)) {
+              for (const subCategory of Object.keys(sources[category])) {
+                const urls = sources[category][subCategory];
+                let fetchedItems = [];
+                
+                for (const url of urls) {
+                  try {
+                    const items = await fetchRSS(url);
+                    fetchedItems = fetchedItems.concat(items);
+                  } catch (e) {
+                    console.log('Error fetching:', url);
+                  }
+                }
+                
+                // 添加来源标签
+                const processedItems = fetchedItems.slice(0, 5).map(item => ({
+                  title: item.title,
+                  source: item.link ? getSourceName(item.link) : '网络',
+                  desc: item.desc,
+                  link: item.link
+                }));
+                
+                // 合并预置内容
+                const fallback = fallbackContent[category]?.[subCategory] || [];
+                articles[category][subCategory] = [...processedItems, ...fallback].slice(0, 5);
+              }
+            }
+          }
+
+          function getSourceName(url) {
+            if (url.includes('zhihu')) return '知乎';
+            if (url.includes('douban')) return '豆瓣';
+            if (url.includes('bilibili')) return 'B站';
+            if (url.includes('dxy') || url.includes('douding')) return '丁香医生';
+            if (url.includes('guokr')) return '果壳';
+            if (url.includes('dianping')) return '大众点评';
+            if (url.includes('xiaohongshu')) return '小红书';
+            return '网络';
+          }
+
+          // 执行
+          (async () => {
+            await buildArticles();
+            
+            const outputPath = path.join('data', 'articles.json');
+            fs.mkdirSync('data', { recursive: true });
+            fs.writeFileSync(outputPath, JSON.stringify(articles, null, 2));
+            console.log('Articles updated successfully!');
+            console.log('Total items:', JSON.stringify(articles, null, 2).length, 'chars');
+          })();
+          EOF
+        continue-on-error: true
+
+      - name: Commit and push changes
+        run: |
+          git config --local user.email "1438409806@qq.com"
+          git config --local user.name "dongshaomeng"
+          git add data/articles.json
+          git diff --quiet && git diff --staged --quiet || git commit -m "Update articles - $(date '+%Y-%m-%d %H:%M')"
+          git push

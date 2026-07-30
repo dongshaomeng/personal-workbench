@@ -1,0 +1,1404 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#a8d8b9">
+<title>个人工作台</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  
+  :root {
+    --primary: #7ec89a;
+    --primary-light: #a8d8b9;
+    --primary-dark: #5ba87a;
+    --bg: #f7faf8;
+    --card-bg: #ffffff;
+    --text: #2d3a33;
+    --text-secondary: #6b7c72;
+    --border: #e4ede7;
+    --shadow: 0 2px 12px rgba(126, 200, 154, 0.08);
+    --shadow-hover: 0 4px 20px rgba(126, 200, 154, 0.15);
+    --danger: #e8858a;
+  }
+  
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+  
+  .mobile-menu-btn {
+    display: none;
+    position: fixed;
+    top: 16px;
+    left: 16px;
+    z-index: 1000;
+    background: var(--primary);
+    color: white;
+    border: none;
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    cursor: pointer;
+    font-size: 20px;
+    box-shadow: var(--shadow);
+  }
+  
+  .sidebar {
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 240px;
+    height: 100vh;
+    background: var(--card-bg);
+    border-right: 1px solid var(--border);
+    padding: 24px 16px;
+    z-index: 100;
+    overflow-y: auto;
+    transition: transform 0.3s ease;
+  }
+  
+  .sidebar-header {
+    text-align: center;
+    padding: 16px 0 24px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 16px;
+  }
+  
+  .sidebar-header h1 {
+    font-size: 20px;
+    color: var(--primary-dark);
+    font-weight: 600;
+  }
+  
+  .sidebar-header p {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-top: 4px;
+  }
+  
+  .nav-menu {
+    list-style: none;
+  }
+  
+  .nav-item {
+    display: flex;
+    align-items: center;
+    padding: 12px 16px;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin-bottom: 4px;
+    color: var(--text);
+  }
+  
+  .nav-item:hover {
+    background: var(--bg);
+    color: var(--primary-dark);
+  }
+  
+  .nav-item.active {
+    background: linear-gradient(135deg, var(--primary-light), var(--primary));
+    color: white;
+    box-shadow: 0 2px 8px rgba(126, 200, 154, 0.3);
+  }
+  
+  .nav-icon {
+    font-size: 20px;
+    margin-right: 12px;
+  }
+  
+  .nav-text {
+    font-size: 14px;
+    font-weight: 500;
+  }
+  
+  .sidebar-footer {
+    position: absolute;
+    bottom: 16px;
+    left: 16px;
+    right: 16px;
+    text-align: center;
+    font-size: 11px;
+    color: var(--text-secondary);
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+  }
+  
+  .main-content {
+    margin-left: 240px;
+    padding: 32px;
+    min-height: 100vh;
+  }
+  
+  .page-header {
+    margin-bottom: 28px;
+  }
+  
+  .page-title {
+    font-size: 24px;
+    font-weight: 600;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  
+  .page-subtitle {
+    color: var(--text-secondary);
+    font-size: 14px;
+    margin-top: 6px;
+  }
+  
+  .card {
+    background: var(--card-bg);
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: var(--shadow);
+    margin-bottom: 20px;
+    transition: box-shadow 0.2s ease;
+  }
+  
+  .card:hover {
+    box-shadow: var(--shadow-hover);
+  }
+  
+  .sub-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+    margin-bottom: 20px;
+  }
+  
+  .sub-card {
+    background: var(--card-bg);
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: var(--shadow);
+    transition: all 0.2s ease;
+    border: 1px solid var(--border);
+  }
+  
+  .sub-card:hover {
+    box-shadow: var(--shadow-hover);
+    transform: translateY(-2px);
+  }
+  
+  .sub-card-title {
+    font-size: 15px;
+    font-weight: 600;
+    margin-bottom: 12px;
+    color: var(--text);
+  }
+  
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border: none;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background: var(--primary);
+    color: white;
+  }
+  
+  .btn:hover {
+    background: var(--primary-dark);
+    transform: translateY(-1px);
+  }
+  
+  .input, .textarea, .select {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--bg);
+    font-size: 14px;
+    color: var(--text);
+    transition: all 0.2s ease;
+    font-family: inherit;
+  }
+  
+  .input:focus, .textarea:focus, .select:focus {
+    outline: none;
+    border-color: var(--primary);
+    background: white;
+    box-shadow: 0 0 0 3px rgba(126, 200, 154, 0.15);
+  }
+  
+  .form-row {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+  }
+  
+  .form-row > * {
+    flex: 1;
+    min-width: 120px;
+  }
+  
+  .todo-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+  
+  .todo-tab {
+    padding: 8px 16px;
+    border-radius: 20px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    cursor: pointer;
+    font-size: 13px;
+    transition: all 0.2s;
+    color: var(--text-secondary);
+  }
+  
+  .todo-tab.active {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+  }
+  
+  .todo-input-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+  }
+  
+  .todo-input-row .input {
+    flex: 1;
+  }
+  
+  .todo-list {
+    list-style: none;
+  }
+  
+  .todo-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 14px 16px;
+    background: var(--bg);
+    border-radius: 12px;
+    margin-bottom: 8px;
+    transition: all 0.2s;
+  }
+  
+  .todo-item:hover {
+    background: #edf5ef;
+  }
+  
+  .todo-checkbox {
+    width: 20px;
+    height: 20px;
+    border: 2px solid var(--primary-light);
+    border-radius: 6px;
+    cursor: pointer;
+    flex-shrink: 0;
+    margin-top: 2px;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .todo-checkbox.checked {
+    background: var(--primary);
+    border-color: var(--primary);
+  }
+  
+  .todo-checkbox.checked::after {
+    content: "✓";
+    color: white;
+    font-size: 12px;
+    font-weight: bold;
+  }
+  
+  .todo-content {
+    flex: 1;
+  }
+  
+  .todo-text {
+    font-size: 14px;
+    color: var(--text);
+    line-height: 1.5;
+  }
+  
+  .todo-item.completed .todo-text {
+    text-decoration: line-through;
+    color: var(--text-secondary);
+  }
+  
+  .todo-actions {
+    display: flex;
+    gap: 4px;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+  
+  .todo-item:hover .todo-actions {
+    opacity: 1;
+  }
+  
+  .todo-btn {
+    width: 28px;
+    height: 28px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    background: transparent;
+    color: var(--text-secondary);
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+  }
+  
+  .todo-btn:hover {
+    background: var(--danger);
+    color: white;
+  }
+  
+  .empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--text-secondary);
+  }
+  
+  .empty-state-icon {
+    font-size: 48px;
+    margin-bottom: 12px;
+    opacity: 0.5;
+  }
+  
+  .article-list {
+    list-style: none;
+  }
+  
+  .article-item {
+    padding: 12px 16px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 6px;
+    border: 1px solid transparent;
+  }
+  
+  .article-item:hover {
+    background: var(--bg);
+    border-color: var(--border);
+  }
+  
+  .article-title {
+    flex: 1;
+    font-size: 14px;
+    color: var(--text);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  
+  .article-source {
+    font-size: 11px;
+    color: var(--text-secondary);
+    flex-shrink: 0;
+  }
+  
+  .delete-btn {
+    opacity: 0;
+    width: 24px;
+    height: 24px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    color: var(--text-secondary);
+    border-radius: 4px;
+    transition: all 0.2s;
+  }
+  
+  .article-item:hover .delete-btn {
+    opacity: 1;
+  }
+  
+  .delete-btn:hover {
+    background: var(--danger);
+    color: white;
+  }
+  
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.4);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 200;
+    padding: 20px;
+  }
+  
+  .modal-overlay.active {
+    display: flex;
+  }
+  
+  .modal {
+    background: white;
+    border-radius: 16px;
+    max-width: 700px;
+    width: 100%;
+    max-height: 85vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .modal-header {
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .modal-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text);
+  }
+  
+  .modal-close {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: var(--text-secondary);
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .modal-close:hover {
+    background: var(--bg);
+  }
+  
+  .modal-body {
+    padding: 24px;
+    overflow-y: auto;
+    flex: 1;
+  }
+  
+  .quote-wall {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .quote-item {
+    padding: 16px;
+    background: linear-gradient(135deg, #f0f9f4, #e4f4ea);
+    border-radius: 12px;
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--text);
+    font-style: italic;
+    position: relative;
+    padding-right: 36px;
+  }
+  
+  .quote-item .delete-btn {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    opacity: 0.5;
+  }
+  
+  .quote-item:hover .delete-btn {
+    opacity: 1;
+  }
+  
+  .record-list {
+    list-style: none;
+  }
+  
+  .record-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    background: var(--bg);
+    border-radius: 10px;
+    margin-bottom: 8px;
+  }
+  
+  .record-date {
+    font-size: 13px;
+    color: var(--text-secondary);
+  }
+  
+  .record-value {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--primary-dark);
+  }
+  
+  .summary-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+  
+  .summary-card {
+    background: linear-gradient(135deg, var(--primary-light), var(--primary));
+    color: white;
+    padding: 20px;
+    border-radius: 16px;
+    text-align: center;
+  }
+  
+  .summary-card-label {
+    font-size: 13px;
+    opacity: 0.9;
+    margin-bottom: 8px;
+  }
+  
+  .summary-card-value {
+    font-size: 24px;
+    font-weight: 700;
+  }
+  
+  .category-tags {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+  }
+  
+  .category-tag {
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: var(--bg);
+    color: var(--text-secondary);
+    border: 1px solid var(--border);
+  }
+  
+  .category-tag.active {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+  }
+  
+  .bill-list {
+    list-style: none;
+  }
+  
+  .bill-item {
+    display: flex;
+    align-items: center;
+    padding: 14px 16px;
+    background: var(--bg);
+    border-radius: 12px;
+    margin-bottom: 8px;
+    gap: 12px;
+  }
+  
+  .bill-category {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+  
+  .bill-category[data-cat="餐饮"] { background: #fff4e6; }
+  .bill-category[data-cat="交通"] { background: #e6f2ff; }
+  .bill-category[data-cat="购物"] { background: #f0e6ff; }
+  .bill-category[data-cat="医疗"] { background: #ffe6e6; }
+  .bill-category[data-cat="其他"] { background: #e6f5e6; }
+  
+  .bill-info { flex: 1; }
+  .bill-note { font-size: 14px; color: var(--text); }
+  .bill-date { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
+  .bill-amount { font-size: 16px; font-weight: 600; color: var(--danger); }
+  .bill-actions { display: flex; gap: 4px; opacity: 0; transition: opacity 0.2s; }
+  .bill-item:hover .bill-actions { opacity: 1; }
+  
+  .floating-input {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    z-index: 150;
+  }
+  
+  .floating-trigger {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: white;
+    border: none;
+    cursor: pointer;
+    font-size: 24px;
+    box-shadow: 0 4px 20px rgba(126, 200, 154, 0.4);
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .floating-trigger:hover {
+    transform: scale(1.05) rotate(90deg);
+  }
+  
+  .floating-panel {
+    position: absolute;
+    bottom: 72px;
+    right: 0;
+    width: 320px;
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.15);
+    padding: 20px;
+    display: none;
+  }
+  
+  .floating-panel.active {
+    display: block;
+    animation: fadeInUp 0.3s ease;
+  }
+  
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  
+  .floating-panel h3 {
+    font-size: 14px;
+    margin-bottom: 12px;
+    color: var(--text);
+  }
+  
+  .inspiration-list {
+    list-style: none;
+    max-height: 200px;
+    overflow-y: auto;
+    margin-bottom: 12px;
+  }
+  
+  .inspiration-item {
+    padding: 8px 12px;
+    background: var(--bg);
+    border-radius: 8px;
+    margin-bottom: 6px;
+    font-size: 13px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+  }
+  
+  .inspiration-text { flex: 1; word-break: break-all; }
+  .inspiration-time { font-size: 11px; color: var(--text-secondary); flex-shrink: 0; }
+  
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  
+  .page {
+    display: none;
+    animation: fadeIn 0.3s ease;
+  }
+  
+  .page.active {
+    display: block;
+  }
+  
+  .auto-update-tip {
+    font-size: 12px;
+    color: var(--primary-dark);
+    background: #eaf6ef;
+    padding: 6px 12px;
+    border-radius: 8px;
+    margin-bottom: 12px;
+    display: inline-block;
+  }
+  
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    background: var(--primary-light);
+    color: white;
+    border-radius: 10px;
+    font-size: 11px;
+    margin-left: 8px;
+  }
+  
+  @media (max-width: 768px) {
+    .mobile-menu-btn { display: flex; align-items: center; justify-content: center; }
+    .sidebar { transform: translateX(-100%); width: 200px; }
+    .sidebar.open { transform: translateX(0); }
+    .main-content { margin-left: 0; padding: 72px 16px 32px; }
+    .sub-cards { grid-template-columns: 1fr; }
+    .floating-panel { width: calc(100vw - 48px); right: 24px; left: 24px; }
+    .form-row { flex-direction: column; }
+    .todo-actions { opacity: 1; }
+    .delete-btn { opacity: 1; }
+    .bill-actions { opacity: 1; }
+    .summary-cards { grid-template-columns: repeat(2, 1fr); }
+  }
+  
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--primary-light); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--primary); }
+  ::selection { background: var(--primary-light); color: white; }
+</style>
+</head>
+<body>
+
+<button class="mobile-menu-btn" id="mobileMenuBtn">☰</button>
+
+<nav class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <h1>🌱 个人工作台</h1>
+    <p>每一天都在成长</p>
+  </div>
+  <ul class="nav-menu" id="navMenu">
+    <li class="nav-item active" data-page="todo">
+      <span class="nav-icon">📋</span>
+      <span class="nav-text">每日待办清单</span>
+    </li>
+    <li class="nav-item" data-page="knowledge">
+      <span class="nav-icon">🧠</span>
+      <span class="nav-text">认知提升库</span>
+    </li>
+    <li class="nav-item" data-page="beijing">
+      <span class="nav-icon">🏙️</span>
+      <span class="nav-text">在北京生活指南</span>
+    </li>
+    <li class="nav-item" data-page="fatloss">
+      <span class="nav-icon">💪</span>
+      <span class="nav-text">减脂成长站</span>
+    </li>
+    <li class="nav-item" data-page="finance">
+      <span class="nav-icon">💰</span>
+      <span class="nav-text">简易记账本</span>
+    </li>
+  </ul>
+  <div class="sidebar-footer">
+    <p id="updateStatus">数据加载中...</p>
+  </div>
+</nav>
+
+<main class="main-content">
+
+<!-- 页面1：每日待办清单 -->
+<section class="page active" id="page-todo">
+  <div class="page-header">
+    <h2 class="page-title">📋 每日待办清单</h2>
+    <p class="page-subtitle">规划每一天，成就每一步</p>
+  </div>
+  <div class="card">
+    <div class="todo-tabs">
+      <div class="todo-tab active" data-tab="today">今日必做 <span class="badge" id="todayCount">0</span></div>
+      <div class="todo-tab" data-tab="longterm">长期计划 <span class="badge" id="longtermCount">0</span></div>
+      <div class="todo-tab" data-tab="all">全部任务</div>
+    </div>
+    <div class="todo-input-row">
+      <input type="text" class="input" id="todoInput" placeholder="添加新任务...">
+      <select class="select" id="todoType" style="width:120px;">
+        <option value="today">今日必做</option>
+        <option value="longterm">长期计划</option>
+      </select>
+      <button class="btn" id="addTodoBtn">+ 添加</button>
+    </div>
+    <ul class="todo-list" id="todoList"></ul>
+  </div>
+</section>
+
+<!-- 页面2：认知提升库 -->
+<section class="page" id="page-knowledge">
+  <div class="page-header">
+    <h2 class="page-title">🧠 认知提升库</h2>
+    <p class="page-subtitle">持续学习，不断进化</p>
+  </div>
+  <div class="sub-cards">
+    <div class="sub-card">
+      <div class="sub-card-title">✅ 成年人必备常识</div>
+      <div class="auto-update-tip">📡 自动推送 · 每周一更新</div>
+      <ul class="article-list" id="knowledgeList1"></ul>
+    </div>
+    <div class="sub-card">
+      <div class="sub-card-title">💡 趣味冷知识 & 科普</div>
+      <div class="auto-update-tip">📡 自动推送 · 每周一更新</div>
+      <ul class="article-list" id="knowledgeList2"></ul>
+    </div>
+    <div class="sub-card">
+      <div class="sub-card-title">📝 思维认知笔记</div>
+      <div class="auto-update-tip">📡 自动推送 · 每周一更新</div>
+      <ul class="article-list" id="knowledgeList3"></ul>
+    </div>
+    <div class="sub-card">
+      <div class="sub-card-title">🎬 优质内容清单</div>
+      <div class="auto-update-tip">📡 自动推送 · 每周一更新</div>
+      <ul class="article-list" id="knowledgeList4"></ul>
+    </div>
+  </div>
+</section>
+
+<!-- 页面3：在北京生活指南 -->
+<section class="page" id="page-beijing">
+  <div class="page-header">
+    <h2 class="page-title">🏙️ 在北京生活指南</h2>
+    <p class="page-subtitle">发现城市美好，享受便捷生活</p>
+  </div>
+  <div class="sub-cards">
+    <div class="sub-card">
+      <div class="sub-card-title">🎫 公共资源</div>
+      <div class="auto-update-tip">📡 自动推送 · 每周一更新</div>
+      <ul class="article-list" id="beijingList1"></ul>
+    </div>
+    <div class="sub-card">
+      <div class="sub-card-title">🚇 出行探店</div>
+      <div class="auto-update-tip">📡 自动推送 · 每周一更新</div>
+      <ul class="article-list" id="beijingList2"></ul>
+    </div>
+    <div class="sub-card">
+      <div class="sub-card-title">🧾 便民福利</div>
+      <div class="auto-update-tip">📡 自动推送 · 每周一更新</div>
+      <ul class="article-list" id="beijingList3"></ul>
+    </div>
+    <div class="sub-card">
+      <div class="sub-card-title">⭐ 个人收藏夹</div>
+      <div class="auto-update-tip">📡 自动推送 · 每周一更新</div>
+      <ul class="article-list" id="beijingList4"></ul>
+    </div>
+  </div>
+</section>
+
+<!-- 页面4：减脂成长站 -->
+<section class="page" id="page-fatloss">
+  <div class="page-header">
+    <h2 class="page-title">💪 减脂成长站</h2>
+    <p class="page-subtitle">科学减脂，持续前行</p>
+  </div>
+  <div class="sub-cards">
+    <div class="sub-card">
+      <div class="sub-card-title">📖 减脂科普小知识</div>
+      <div class="auto-update-tip">📡 自动推送 · 每日更新</div>
+      <ul class="article-list" id="fatlossList1"></ul>
+    </div>
+    <div class="sub-card">
+      <div class="sub-card-title">✨ 激励文案墙</div>
+      <div class="auto-update-tip">📡 自动推送 · 每日更新</div>
+      <div class="quote-wall" id="quoteWall"></div>
+    </div>
+    <div class="sub-card">
+      <div class="sub-card-title">📊 成功案例集锦</div>
+      <div class="auto-update-tip">📡 自动推送 · 每日更新</div>
+      <ul class="article-list" id="fatlossList2"></ul>
+    </div>
+    <div class="sub-card">
+      <div class="sub-card-title">📅 减脂打卡区</div>
+      <div class="form-row">
+        <input type="date" class="input" id="recordDate">
+        <input type="text" class="input" id="recordWeight" placeholder="体重(kg)">
+        <input type="text" class="input" id="recordDiet" placeholder="饮食简单记录">
+        <button class="btn" onclick="addRecord()">打卡</button>
+      </div>
+      <ul class="record-list" id="recordList"></ul>
+    </div>
+  </div>
+</section>
+
+<!-- 页面5：简易记账本 -->
+<section class="page" id="page-finance">
+  <div class="page-header">
+    <h2 class="page-title">💰 简易记账本</h2>
+    <p class="page-subtitle">记录每一笔开销，掌控消费生活</p>
+  </div>
+  <div class="summary-cards">
+    <div class="summary-card">
+      <div class="summary-card-label">本月总支出</div>
+      <div class="summary-card-value" id="monthTotal">¥0.00</div>
+    </div>
+    <div class="summary-card" style="background: linear-gradient(135deg, #a8d8b9, #8bcfa3);">
+      <div class="summary-card-label">今日支出</div>
+      <div class="summary-card-value" id="todayTotal">¥0.00</div>
+    </div>
+    <div class="summary-card" style="background: linear-gradient(135deg, #b5e0c3, #94d4a8);">
+      <div class="summary-card-label">记账笔数</div>
+      <div class="summary-card-value" id="billCount">0</div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title" style="font-size:16px;font-weight:600;margin-bottom:16px;">📝 快速录入</div>
+    <div class="form-row">
+      <select class="select" id="billCategory" style="max-width:120px;">
+        <option value="餐饮">🍜 餐饮</option>
+        <option value="交通">🚗 交通</option>
+        <option value="购物">🛍️ 购物</option>
+        <option value="医疗">💊 医疗</option>
+        <option value="其他">📦 其他</option>
+      </select>
+      <input type="number" class="input" id="billAmount" placeholder="金额" step="0.01">
+      <input type="text" class="input" id="billNote" placeholder="备注（可选）">
+      <input type="date" class="input" id="billDate">
+      <button class="btn" onclick="addBill()">+ 添加账单</button>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title" style="font-size:16px;font-weight:600;margin-bottom:16px;">📊 账单列表</div>
+    <div class="category-tags" id="billFilter">
+      <div class="category-tag active" data-filter="all">全部</div>
+      <div class="category-tag" data-filter="餐饮">🍜 餐饮</div>
+      <div class="category-tag" data-filter="交通">🚗 交通</div>
+      <div class="category-tag" data-filter="购物">🛍️ 购物</div>
+      <div class="category-tag" data-filter="医疗">💊 医疗</div>
+      <div class="category-tag" data-filter="其他">📦 其他</div>
+    </div>
+    <ul class="bill-list" id="billList"></ul>
+  </div>
+</section>
+
+</main>
+
+<div class="floating-input">
+  <button class="floating-trigger" id="floatingBtn">💡</button>
+  <div class="floating-panel" id="floatingPanel">
+    <h3>💡 灵感速记</h3>
+    <input type="text" class="input" id="inspirationInput" placeholder="随时记录你的灵感...">
+    <button class="btn" style="width:100%; margin-top:10px;" onclick="addInspiration()">保存灵感</button>
+    <ul class="inspiration-list" id="inspirationList" style="margin-top:12px;"></ul>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modalTitle">文章详情</div>
+      <button class="modal-close" onclick="closeModal()">×</button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+  </div>
+</div>
+
+<script>
+// ========== 数据存储层 ==========
+const Storage = {
+  get(key, defaultValue) {
+    try {
+      const data = localStorage.getItem(key);
+      return data ? JSON.parse(data) : defaultValue;
+    } catch { return defaultValue; }
+  },
+  set(key, value) {
+    localStorage.setItem(key, JSON.stringify(value));
+  }
+};
+
+// ========== 状态管理 ==========
+const State = {
+  todos: Storage.get('todos', []),
+  bills: Storage.get('bills', []),
+  inspirations: Storage.get('inspirations', []),
+  records: Storage.get('fatlossRecords', []),
+  currentTodoTab: 'today',
+  currentBillFilter: 'all',
+  articles: null
+};
+
+// ========== 从远程加载文章数据 ==========
+const DATA_URL = 'https://dongshaomeng.github.io/personal-workbench/data/articles.json';
+
+async function loadArticles() {
+  try {
+    const res = await fetch(DATA_URL, { cache: 'no-store' });
+    if (!res.ok) throw new Error('Network error');
+    const data = await res.json();
+    State.articles = data;
+    Storage.set('cachedArticles', data);
+    const updateTime = data.lastUpdate ? new Date(data.lastUpdate).toLocaleDateString('zh-CN') : '未知';
+    document.getElementById('updateStatus').textContent = `上次更新: ${updateTime}`;
+    renderAllArticles();
+    return true;
+  } catch (e) {
+    console.log('从远程加载失败，使用缓存:', e);
+    const cached = Storage.get('cachedArticles', null);
+    if (cached) {
+      State.articles = cached;
+      renderAllArticles();
+    }
+    document.getElementById('updateStatus').textContent = '离线模式';
+    return false;
+  }
+}
+
+function renderAllArticles() {
+  if (!State.articles) return;
+  renderArticleList('knowledgeList1', State.articles.knowledge?.common || []);
+  renderArticleList('knowledgeList2', State.articles.knowledge?.fun || []);
+  renderArticleList('knowledgeList3', State.articles.knowledge?.notes || []);
+  renderArticleList('knowledgeList4', State.articles.knowledge?.media || []);
+  renderArticleList('beijingList1', State.articles.beijing?.resource || []);
+  renderArticleList('beijingList2', State.articles.beijing?.food || []);
+  renderArticleList('beijingList3', State.articles.beijing?.welfare || []);
+  renderArticleList('beijingList4', State.articles.beijing?.favorites || []);
+  renderArticleList('fatlossList1', State.articles.fatloss?.knowledge || []);
+  renderArticleList('fatlossList2', State.articles.fatloss?.cases || []);
+  renderQuotes(State.articles.fatloss?.quotes || []);
+}
+
+function renderArticleList(listId, items) {
+  const list = document.getElementById(listId);
+  if (!list) return;
+  list.innerHTML = items.map((item, idx) => `
+    <li class="article-item" data-list="${listId}" data-idx="${idx}">
+      <span class="article-title">${item.title}</span>
+      ${item.source ? `<span class="article-source">${item.source}</span>` : ''}
+    </li>
+  `).join('');
+}
+
+function renderQuotes(quotes) {
+  const wall = document.getElementById('quoteWall');
+  if (!wall) return;
+  wall.innerHTML = quotes.map((q, idx) => `
+    <div class="quote-item" data-idx="${idx}">${q.title}</div>
+  `).join('');
+}
+
+// 文章点击事件（事件委托）
+document.querySelectorAll('.article-list').forEach(list => {
+  list.addEventListener('click', e => {
+    const li = e.target.closest('.article-item');
+    if (!li) return;
+    const listId = li.dataset.list;
+    const idx = parseInt(li.dataset.idx);
+    const items = getArticleItems(listId);
+    if (items && items[idx]) showArticleModal(items[idx]);
+  });
+});
+
+function getArticleItems(listId) {
+  const map = {
+    knowledgeList1: State.articles?.knowledge?.common,
+    knowledgeList2: State.articles?.knowledge?.fun,
+    knowledgeList3: State.articles?.knowledge?.notes,
+    knowledgeList4: State.articles?.knowledge?.media,
+    beijingList1: State.articles?.beijing?.resource,
+    beijingList2: State.articles?.beijing?.food,
+    beijingList3: State.articles?.beijing?.welfare,
+    beijingList4: State.articles?.beijing?.favorites,
+    fatlossList1: State.articles?.fatloss?.knowledge,
+    fatlossList2: State.articles?.fatloss?.cases
+  };
+  return map[listId] || [];
+}
+
+function showArticleModal(item) {
+  const title = item.title || '';
+  document.getElementById('modalTitle').textContent = title;
+  const sourceHtml = item.source
+    ? `<span style="display:inline-block;padding:3px 12px;background:#eaf6ef;border-radius:10px;font-size:12px;color:var(--primary-dark);margin-left:8px;">来源：${item.source}</span>`
+    : '';
+  const descHtml = item.desc
+    ? `<div style="margin-top:18px;padding:18px;background:var(--bg);border-radius:12px;"><p style="color:var(--text);line-height:1.9;font-size:14px;">${item.desc}</p></div>`
+    : '';
+  const linkHtml = item.link
+    ? `<div style="margin-top:20px;text-align:center;"><a href="${item.link}" target="_blank" style="display:inline-block;padding:10px 28px;background:var(--primary);color:white;border-radius:10px;text-decoration:none;font-size:14px;">🔗 查看原文</a></div>`
+    : '';
+  document.getElementById('modalBody').innerHTML = `
+    <h2 style="display:flex;align-items:center;flex-wrap:wrap;">${title}${sourceHtml}</h2>
+    ${descHtml}${linkHtml}
+  `;
+  document.getElementById('modalOverlay').classList.add('active');
+}
+
+function closeModal() {
+  document.getElementById('modalOverlay').classList.remove('active');
+}
+
+document.getElementById('modalOverlay').addEventListener('click', e => {
+  if (e.target.id === 'modalOverlay') closeModal();
+});
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeModal();
+});
+
+// ========== 导航切换 ==========
+const navItems = document.querySelectorAll('.nav-item');
+const pages = document.querySelectorAll('.page');
+
+navItems.forEach(item => {
+  item.addEventListener('click', () => {
+    const pageId = item.dataset.page;
+    navItems.forEach(i => i.classList.remove('active'));
+    item.classList.add('active');
+    pages.forEach(p => p.classList.remove('active'));
+    document.getElementById('page-' + pageId).classList.add('active');
+    document.getElementById('sidebar').classList.remove('open');
+  });
+});
+
+document.getElementById('mobileMenuBtn').addEventListener('click', () => {
+  document.getElementById('sidebar').classList.toggle('open');
+});
+
+// ========== 待办清单 ==========
+function renderTodos() {
+  const todoList = document.getElementById('todoList');
+  const filtered = State.todos.filter(t => {
+    if (State.currentTodoTab === 'all') return true;
+    return t.type === State.currentTodoTab;
+  });
+  
+  if (filtered.length === 0) {
+    todoList.innerHTML = `<div class="empty-state"><div class="empty-state-icon">📝</div><p>还没有任务，开始添加吧！</p></div>`;
+  } else {
+    todoList.innerHTML = filtered.map(todo => `
+      <li class="todo-item ${todo.completed ? 'completed' : ''}">
+        <div class="todo-checkbox ${todo.completed ? 'checked' : ''}" data-id="${todo.id}"></div>
+        <div class="todo-content"><div class="todo-text">${todo.text}</div></div>
+        <div class="todo-actions">
+          <button class="todo-btn" data-action="delete" data-id="${todo.id}">🗑️</button>
+        </div>
+      </li>
+    `).join('');
+  }
+  
+  document.getElementById('todayCount').textContent = State.todos.filter(t => t.type === 'today').length;
+  document.getElementById('longtermCount').textContent = State.todos.filter(t => t.type === 'longterm').length;
+}
+
+function addTodo() {
+  const input = document.getElementById('todoInput');
+  const type = document.getElementById('todoType').value;
+  const text = input.value.trim();
+  if (!text) return;
+  
+  State.todos.push({ id: Date.now(), text, type, completed: false });
+  Storage.set('todos', State.todos);
+  input.value = '';
+  renderTodos();
+}
+
+document.getElementById('addTodoBtn').addEventListener('click', addTodo);
+document.getElementById('todoInput').addEventListener('keypress', e => {
+  if (e.key === 'Enter') addTodo();
+});
+
+document.getElementById('todoList').addEventListener('click', e => {
+  const id = parseInt(e.target.dataset.id);
+  if (e.target.classList.contains('todo-checkbox')) {
+    const todo = State.todos.find(t => t.id === id);
+    if (todo) {
+      todo.completed = !todo.completed;
+      Storage.set('todos', State.todos);
+      renderTodos();
+    }
+  } else if (e.target.dataset.action === 'delete') {
+    State.todos = State.todos.filter(t => t.id !== id);
+    Storage.set('todos', State.todos);
+    renderTodos();
+  }
+});
+
+document.querySelectorAll('.todo-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.todo-tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    State.currentTodoTab = tab.dataset.tab;
+    renderTodos();
+  });
+});
+
+// ========== 减脂打卡 ==========
+document.getElementById('recordDate').value = new Date().toISOString().split('T')[0];
+
+function renderRecords() {
+  const list = document.getElementById('recordList');
+  list.innerHTML = State.records.map((r, idx) => `
+    <li class="record-item">
+      <span class="record-date">${r.date}</span>
+      <span style="flex:1;padding:0 12px;color:var(--text-secondary);font-size:13px;">${r.diet || ''}</span>
+      <span class="record-value">${r.weight ? r.weight + 'kg' : ''}</span>
+      <button class="delete-btn" data-idx="${idx}" title="删除">×</button>
+    </li>
+  `).join('');
+}
+
+function addRecord() {
+  const date = document.getElementById('recordDate').value;
+  const weight = document.getElementById('recordWeight').value;
+  const diet = document.getElementById('recordDiet').value;
+  State.records.push({ id: Date.now(), date, weight, diet });
+  Storage.set('fatlossRecords', State.records);
+  document.getElementById('recordWeight').value = '';
+  document.getElementById('recordDiet').value = '';
+  renderRecords();
+}
+
+document.getElementById('recordList').addEventListener('click', e => {
+  if (e.target.classList.contains('delete-btn')) {
+    State.records.splice(parseInt(e.target.dataset.idx), 1);
+    Storage.set('fatlossRecords', State.records);
+    renderRecords();
+  }
+});
+
+// ========== 记账本 ==========
+document.getElementById('billDate').value = new Date().toISOString().split('T')[0];
+
+function renderBills() {
+  const billList = document.getElementById('billList');
+  const filtered = State.currentBillFilter === 'all' 
+    ? State.bills 
+    : State.bills.filter(b => b.category === State.currentBillFilter);
+  
+  if (filtered.length === 0) {
+    billList.innerHTML = `<div class="empty-state"><div class="empty-state-icon">💰</div><p>还没有账单记录</p></div>`;
+  } else {
+    billList.innerHTML = filtered.map(bill => `
+      <li class="bill-item" data-id="${bill.id}">
+        <div class="bill-category" data-cat="${bill.category}">${getCategoryIcon(bill.category)}</div>
+        <div class="bill-info">
+          <div class="bill-note">${bill.note || '无备注'}</div>
+          <div class="bill-date">${bill.date}</div>
+        </div>
+        <div class="bill-amount">¥${parseFloat(bill.amount).toFixed(2)}</div>
+        <div class="bill-actions">
+          <button class="todo-btn" data-action="delete" title="删除">🗑️</button>
+        </div>
+      </li>
+    `).join('');
+  }
+  
+  updateBillSummary();
+}
+
+function getCategoryIcon(cat) {
+  const icons = { '餐饮': '🍜', '交通': '🚗', '购物': '🛍️', '医疗': '💊', '其他': '📦' };
+  return icons[cat] || '📦';
+}
+
+function updateBillSummary() {
+  const now = new Date();
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+  const today = now.toISOString().split('T')[0];
+  
+  const monthTotal = State.bills.filter(b => new Date(b.date) >= monthStart).reduce((sum, b) => sum + parseFloat(b.amount), 0);
+  const todayTotal = State.bills.filter(b => b.date === today).reduce((sum, b) => sum + parseFloat(b.amount), 0);
+  
+  document.getElementById('monthTotal').textContent = '¥' + monthTotal.toFixed(2);
+  document.getElementById('todayTotal').textContent = '¥' + todayTotal.toFixed(2);
+  document.getElementById('billCount').textContent = State.bills.length;
+}
+
+function addBill() {
+  const category = document.getElementById('billCategory').value;
+  const amount = document.getElementById('billAmount').value;
+  const note = document.getElementById('billNote').value.trim();
+  const date = document.getElementById('billDate').value;
+  
+  if (!amount || parseFloat(amount) <= 0) { alert('请输入有效金额'); return; }
+  
+  State.bills.push({ id: Date.now(), category, amount: parseFloat(amount), note, date });
+  Storage.set('bills', State.bills);
+  document.getElementById('billAmount').value = '';
+  document.getElementById('billNote').value = '';
+  renderBills();
+}
+
+document.getElementById('billList').addEventListener('click', e => {
+  const item = e.target.closest('.bill-item');
+  if (!item) return;
+  const id = parseInt(item.dataset.id);
+  if (e.target.dataset.action === 'delete') {
+    State.bills = State.bills.filter(b => b.id !== id);
+    Storage.set('bills', State.bills);
+    renderBills();
+  }
+});
+
+document.querySelectorAll('#billFilter .category-tag').forEach(tag => {
+  tag.addEventListener('click', () => {
+    document.querySelectorAll('#billFilter .category-tag').forEach(t => t.classList.remove('active'));
+    tag.classList.add('active');
+    State.currentBillFilter = tag.dataset.filter;
+    renderBills();
+  });
+});
+
+// ========== 悬浮灵感 ==========
+document.getElementById('floatingBtn').addEventListener('click', () => {
+  document.getElementById('floatingPanel').classList.toggle('active');
+});
+
+function renderInspirations() {
+  const list = document.getElementById('inspirationList');
+  if (State.inspirations.length === 0) {
+    list.innerHTML = '<div class="empty-state" style="padding:20px;"><p>还没有灵感记录</p></div>';
+    return;
+  }
+  list.innerHTML = State.inspirations.slice().reverse().map(item => `
+    <li class="inspiration-item">
+      <span class="inspiration-text">${item.text}</span>
+      <span class="inspiration-time">${item.time}</span>
+    </li>
+  `).join('');
+}
+
+function addInspiration() {
+  const input = document.getElementById('inspirationInput');
+  const text = input.value.trim();
+  if (!text) return;
+  
+  State.inspirations.push({ id: Date.now(), text, time: new Date().toLocaleString('zh-CN') });
+  Storage.set('inspirations', State.inspirations);
+  input.value = '';
+  renderInspirations();
+}
+
+document.getElementById('inspirationInput').addEventListener('keypress', e => {
+  if (e.key === 'Enter') addInspiration();
+});
+
+// ========== 初始化 ==========
+function init() {
+  renderTodos();
+  renderRecords();
+  renderBills();
+  renderInspirations();
+  loadArticles();
+}
+
+document.addEventListener('DOMContentLoaded', init);
+</script>
+
+</body>
+</html>
