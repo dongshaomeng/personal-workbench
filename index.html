@@ -1167,9 +1167,34 @@ function renderAllArticles() {
   renderArticleList('beijingList2', State.articles.beijing?.food || []);
   renderArticleList('beijingList3', State.articles.beijing?.welfare || []);
   renderArticleList('beijingList4', State.articles.beijing?.favorites || []);
-  renderArticleList('fatlossList1', State.articles.fatloss?.knowledge || []);
-  renderArticleList('fatlossList2', State.articles.fatloss?.cases || []);
-  renderQuotes(State.articles.fatloss?.quotes || []);
+  // 减脂成长站：按日期做种子，每天从文章池中轮换展示不同的内容，实现"每日更新"效果
+  renderArticleList('fatlossList1', pickDailyItems(State.articles.fatloss?.knowledge || [], 3, 'fat_knowledge'));
+  renderArticleList('fatlossList2', pickDailyItems(State.articles.fatloss?.cases || [], 3, 'fat_cases'));
+  renderQuotes(pickDailyItems(State.articles.fatloss?.quotes || [], 4, 'fat_quotes'));
+}
+
+// 根据日期生成稳定的随机种子，同一天内结果一致，每天切换展示不同的条目
+function pickDailyItems(items, count, salt) {
+  if (!items || items.length === 0) return [];
+  if (items.length <= count) return items;
+  const today = new Date();
+  const dateStr = today.getFullYear() + '-' + (today.getMonth() + 1) + '-' + today.getDate() + '-' + salt;
+  // 用日期字符串计算哈希值作为种子
+  let seed = 0;
+  for (let i = 0; i < dateStr.length; i++) {
+    seed = ((seed << 5) - seed) + dateStr.charCodeAt(i);
+    seed |= 0;
+  }
+  seed = Math.abs(seed) || 1;
+  // 使用种子打乱数组并取前 count 条
+  const shuffled = items.slice();
+  let s = seed;
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    s = (s * 9301 + 49297) % 233280;
+    const j = s % (i + 1);
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled.slice(0, count);
 }
 
 function renderArticleList(listId, items) {
@@ -1181,6 +1206,8 @@ function renderArticleList(listId, items) {
       ${item.source ? `<span class="article-source">${item.source}</span>` : ''}
     </li>
   `).join('');
+  // 保存当前渲染的条目，用于点击时按索引查找（解决每日筛选后索引不一致问题）
+  list._renderedItems = items;
 }
 
 function renderQuotes(quotes) {
@@ -1196,9 +1223,10 @@ document.querySelectorAll('.article-list').forEach(list => {
   list.addEventListener('click', e => {
     const li = e.target.closest('.article-item');
     if (!li) return;
-    const listId = li.dataset.list;
+    const list = e.currentTarget;
     const idx = parseInt(li.dataset.idx);
-    const items = getArticleItems(listId);
+    // 优先使用渲染时缓存的条目（每日轮换后顺序会变），否则退回到全量列表
+    const items = list._renderedItems || getArticleItems(li.dataset.list);
     if (items && items[idx]) showArticleModal(items[idx]);
   });
 });
