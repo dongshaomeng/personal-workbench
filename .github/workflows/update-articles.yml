@@ -1,9 +1,9 @@
-name: Update Articles Weekly
+name: Update Articles Daily
 
 on:
   schedule:
-    # 每周一北京时间8点运行 (UTC时间0点)
-    - cron: '0 0 * * 1'
+    # 每天北京时间8点运行 (UTC时间0点)
+    - cron: '0 0 * * *'
   workflow_dispatch: # 支持手动触发
 
 permissions:
